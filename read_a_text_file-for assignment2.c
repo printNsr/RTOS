@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h> // For exit() function
 
+// reads data from the pipe
+
 int main(int argc, char** argv) {
     char c[1000];
     FILE *fptr;
