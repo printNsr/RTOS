@@ -69,6 +69,12 @@ void* ThreadB(void *params);
 /* This thread reads from shared variable and outputs non-header text to src.txt */
 void* ThreadC(void *params);
 
+static double sum_numbers(const char*line) {
+  double total = 0.0;
+  double value = 0.0;
+  int consumed = 0;
+  const char *p = line;
+}
 /* --- Main Code --- */
 int main(int argc, char const *argv[]) {
   
