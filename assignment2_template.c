@@ -165,7 +165,6 @@ if(sem_init(&(params->sem_B), 0, 0) != 0) { // Set up Sem for thread B
   //TODO: add your code
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-  memset(params->message, 0, sizeof(params->message));
   memset(params->inputFile, 0, sizeof(params->inputFile));
   memset(params->outputFile, 0, sizeof(params->outputFile));
 
@@ -198,11 +197,11 @@ if(sem_init(&(params->sem_B), 0, 0) != 0) { // Set up Sem for thread B
 }
 
 void* ThreadA(void *params) {
+  //TODO: add your code
   ThreadParams *p = (ThreadParams *)params;
   FILE *inputFile = fopen(p->inputFile, "r");
   char line[LINE_SIZE];
   ssize_t bytes;
-  int sum = 0;
 
   if (inputFile == NULL) {
     perror("ThreadA: fopen");
@@ -230,7 +229,6 @@ void* ThreadA(void *params) {
   sem_post(&p->sem_B);
 
   fclose(inputFile);
-  printf("Thread A: sum = %d\n", sum);
   pthread_exit(NULL);
 }
 
@@ -238,7 +236,6 @@ void* ThreadB(void *params) {
   //TODO: add your code
   ThreadParams *p = (ThreadParams*)params;
   char line[LINE_SIZE];
-  int sum = 0;
 
   while (1) {
     sem_wait(&(p->sem_B));
@@ -259,7 +256,6 @@ void* ThreadB(void *params) {
     }
   }
 
-  printf("Thread B: sum = %d\n", sum);
   return NULL;
 }
 
