@@ -242,40 +242,19 @@ void* ThreadB(void *params) {
 
   while (1) {
     sem_wait(&(p->sem_B));
+
     memset(line, 0, sizeof(line));
     if (read(p->pipeFile[0], line, sizeof(line)) <= 0) {
       snprintf(line, sizeof(line), "%s", EOF_TOKEN);
     }
-    strncpy(sharedData->line, line, sizeof(sharedData->line) - 1);
-    sharedData->line[sizeof(sharedData->line) - 1] = '\0';
-    sharedData->eof = (strcmp(sharedData->line, EOF_TOKEN) == 0) ? 1 : 0;
+
+    strncpy(shareddata->line, line, sizeof(shareddata->line) - 1);
+    shareddata->line[sizeof(shareddata->line) - 1] = '\0';
+    shareddata->eof = (strcmp(shareddata->line, EOF_TOKEN) == 0) ? 1 : 0;
+
     sem_post(&(p->sem_C));
-    if (sharedData->eof) {
-      break;
-    }
-  }
 
-  printf("Thread B: sum = %d\n", sum);
-}
-
-void* ThreadC(void *params) {
-  // TODO: Thread C should read from shared memory and write the output file.
-  //       You and your teammate can implement this together later.
- ThreadParams *p = (ThreadParams*)params;
-  char line[LINE_SIZE];
-  int sum = 0;
-
-  while (1) {
-    sem_wait(&(p->sem_B));
-    memset(line, 0, sizeof(line));
-    if (read(p->pipeFile[0], line, sizeof(line)) <= 0) {
-      snprintf(line, sizeof(line), "%s", EOF_TOKEN);
-    }
-    strncpy(sharedData->line, line, sizeof(sharedData->line) - 1);
-    sharedData->line[sizeof(sharedData->line) - 1] = '\0';
-    sharedData->eof = (strcmp(sharedData->line, EOF_TOKEN) == 0) ? 1 : 0;
-    sem_post(&(p->sem_C));
-    if (sharedData->eof) {
+    if (shareddata->eof) {
       break;
     }
   }
@@ -299,9 +278,10 @@ void* ThreadC(void *params) {
 
   while (1) {
     sem_wait(&(p->sem_C));
-    strncpy(line, sharedData->line, sizeof(line) - 1);
+
+    strncpy(line, shareddata->line, sizeof(line) - 1);
     line[sizeof(line) - 1] = '\0';
-    eof = sharedData->eof;
+    eof = shareddata->eof;
 
     if (eof) {
       break;
@@ -320,6 +300,7 @@ void* ThreadC(void *params) {
     }
     fputs(line, stdout);
     sum += sum_numbers(line);
+
     sem_post(&(p->sem_A));
   }
 
