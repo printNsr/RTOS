@@ -30,6 +30,10 @@
 #define SHARED_MEM_NAME "/my_shared_memory"
 #define SHARED_MEM_SIZE 1024
 
+// line size and end of file token for controlled threat shutdown
+#define LINE_SIZE 255
+#define EOF_TOKEN "__EOF__"
+
 /* --- Structs --- */
 typedef struct ThreadParams {
   int pipeFile[2]; // [0] for read and [1] for write. use pipe for data transfer from thread A to thread B
@@ -39,9 +43,17 @@ typedef struct ThreadParams {
   char outputFile[100]; // output file name
 } ThreadParams;
 
+typedef struct SharedMemoryData {
+  int eof;
+  char line[LINE_SIZE];
+}
+SharedMemoryData;
+
 pthread_attr_t attr;
 
 int shm_fd;// use shared memory for data transfer from thread B to Thread C 
+
+static SharedMemoryData *shareddata = NULL;
 
 /* --- Prototypes --- */
 
