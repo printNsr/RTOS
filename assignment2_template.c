@@ -148,15 +148,15 @@ int main(int argc, char const *argv[]) {
 void initializeData(ThreadParams *params) {
   // Initialize Sempahores
   if(sem_init(&(params->sem_A), 0, 1) != 0) { // Set up Sem for thread A
-    perror("error for init threa A");
+    perror("error for init thread A");
     exit(1);
   }
 if(sem_init(&(params->sem_B), 0, 0) != 0) { // Set up Sem for thread B
-    perror("error for init threa B");
+    perror("error for init thread B");
     exit(1);
   }
   if(sem_init(&(params->sem_C), 0, 0) != 0) { // Set up Sem for thread C
-    perror("error for init threa C");
+    perror("error for init thread C");
     exit(1);
   } 
 
