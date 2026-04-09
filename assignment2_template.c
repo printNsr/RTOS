@@ -132,9 +132,9 @@ int main(int argc, char const *argv[]) {
   close(params.pipeFile[0]);
   close(params.pipeFile[1]);
 
-  if (sharedData != NULL) {
-    munmap(sharedData, SHARED_MEM_SIZE);
-    sharedData = NULL;
+  if (shareddata != NULL) {
+    munmap(shareddata, SHARED_MEM_SIZE);
+    shareddata = NULL;
   }
 
   if (shm_fd >= 0) {
@@ -185,32 +185,66 @@ if(sem_init(&(params->sem_B), 0, 0) != 0) { // Set up Sem for thread B
     exit(1);
   }
 
-  sharedData = (SharedMemoryData*)mmap(NULL, SHARED_MEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-  if (sharedData == MAP_FAILED) {
+  shareddata = (SharedMemoryData*)mmap(NULL, SHARED_MEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+  if (shareddata == MAP_FAILED) {
     perror("mmap");
     exit(1);
   }
 
-  sharedData->eof = 0;
-  memset(sharedData->line, 0, sizeof(sharedData->line));
+  shareddata->eof = 0;
+  memset(shareddata->line, 0, sizeof(shareddata->line));
 
   return;
 }
 
 void* ThreadA(void *params) {
-  //TODO: add your code
-  
-printf("Thread A: sum = %d\n", sum);
+  ThreadParams *p = (ThreadParams *)params;
+  FILE *inputFile = fopen(p->inputFile, "r");
+  char line[LINE_SIZE];
+  ssize_t bytes;
+
+  if (inputFile == NULL) {
+    perror("ThreadA: fopen");
+    pthread_exit(NULL);
+  }
+
+  close(p->pipeFile[0]); // close unused read end in Thread A
+
+  while (fgets(line, sizeof(line), inputFile) != NULL) {
+    sem_wait(&p->sem_A);
+
+    bytes = write(p->pipeFile[1], line, strlen(line) + 1);
+    if (bytes == -1) {
+      perror("ThreadA: write");
+      sem_post(&p->sem_B);
+      break;
+    }
+
+    sem_post(&p->sem_B);
+  }
+
+  sem_wait(&p->sem_A);
+  bytes = write(p->pipeFile[1], EOF_TOKEN, strlen(EOF_TOKEN) + 1);
+  if (bytes == -1) {
+    perror("ThreadA: write EOF");
+  }
+  sem_post(&p->sem_B);
+
+  fclose(inputFile);
+  close(p->pipeFile[1]);
+  pthread_exit(NULL);
 }
 
 void* ThreadB(void *params) {
-  //TODO: add your code
-
-  printf("Thread B: sum = %d\n", sum);
+  // TODO: Thread B should read from the pipe and write into shared memory.
+  //       Your teammate can implement this function.
+  (void)params;
+  pthread_exit(NULL);
 }
 
 void* ThreadC(void *params) {
-  //TODO: add your code
-
- printf("Thread C: Final sum = %d\n", sum);
+  // TODO: Thread C should read from shared memory and write the output file.
+  //       You and your teammate can implement this together later.
+  (void)params;
+  pthread_exit(NULL);
 }
