@@ -205,6 +205,24 @@ printf("Thread A: sum = %d\n", sum);
 
 void* ThreadB(void *params) {
   //TODO: add your code
+  ThreadParams *p = (ThreadParams*)params;
+  char line[LINE_SIZE];
+  int sum = 0;
+
+  while (1) {
+    sem_wait(&(p->sem_B));
+    memset(line, 0, sizeof(line));
+    if (read(p->pipeFile[0], line, sizeof(line)) <= 0) {
+      snprintf(line, sizeof(line), "%s", EOF_TOKEN);
+    }
+    strncpy(sharedData->line, line, sizeof(sharedData->line) - 1);
+    sharedData->line[sizeof(sharedData->line) - 1] = '\0';
+    sharedData->eof = (strcmp(sharedData->line, EOF_TOKEN) == 0) ? 1 : 0;
+    sem_post(&(p->sem_C));
+    if (sharedData->eof) {
+      break;
+    }
+  }
 
   printf("Thread B: sum = %d\n", sum);
 }
