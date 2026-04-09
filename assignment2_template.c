@@ -202,13 +202,12 @@ void* ThreadA(void *params) {
   FILE *inputFile = fopen(p->inputFile, "r");
   char line[LINE_SIZE];
   ssize_t bytes;
+  int sum = 0;
 
   if (inputFile == NULL) {
     perror("ThreadA: fopen");
     pthread_exit(NULL);
   }
-
-  close(p->pipeFile[0]); // close unused read end in Thread A
 
   while (fgets(line, sizeof(line), inputFile) != NULL) {
     sem_wait(&p->sem_A);
@@ -231,7 +230,7 @@ void* ThreadA(void *params) {
   sem_post(&p->sem_B);
 
   fclose(inputFile);
-  close(p->pipeFile[1]);
+  printf("Thread A: sum = %d\n", sum);
   pthread_exit(NULL);
 }
 
