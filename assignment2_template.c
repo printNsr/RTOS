@@ -261,6 +261,72 @@ void* ThreadB(void *params) {
 void* ThreadC(void *params) {
   // TODO: Thread C should read from shared memory and write the output file.
   //       You and your teammate can implement this together later.
-  (void)params;
-  pthread_exit(NULL);
+ ThreadParams *p = (ThreadParams*)params;
+  char line[LINE_SIZE];
+  int sum = 0;
+
+  while (1) {
+    sem_wait(&(p->sem_B));
+    memset(line, 0, sizeof(line));
+    if (read(p->pipeFile[0], line, sizeof(line)) <= 0) {
+      snprintf(line, sizeof(line), "%s", EOF_TOKEN);
+    }
+    strncpy(sharedData->line, line, sizeof(sharedData->line) - 1);
+    sharedData->line[sizeof(sharedData->line) - 1] = '\0';
+    sharedData->eof = (strcmp(sharedData->line, EOF_TOKEN) == 0) ? 1 : 0;
+    sem_post(&(p->sem_C));
+    if (sharedData->eof) {
+      break;
+    }
+  }
+
+  printf("Thread B: sum = %d\n", sum);
+  return NULL;
+}
+
+void* ThreadC(void *params) {
+  //TODO: add your code
+  ThreadParams *p = (ThreadParams*)params;
+  FILE *fout = fopen(p->outputFile, "w");
+  int header_done = 0;
+  double sum = 0.0;
+  char line[LINE_SIZE];
+  int eof = 0;
+
+  if (fout == NULL) {
+    perror("Thread C fopen output");
+  }
+
+  while (1) {
+    sem_wait(&(p->sem_C));
+    strncpy(line, sharedData->line, sizeof(line) - 1);
+    line[sizeof(line) - 1] = '\0';
+    eof = sharedData->eof;
+
+    if (eof) {
+      break;
+    }
+
+    if (!header_done) {
+      if (strncmp(line, "end_header", 10) == 0) {
+        header_done = 1;
+      }
+      sem_post(&(p->sem_A));
+      continue;
+    }
+
+    if (fout != NULL) {
+      fputs(line, fout);
+    }
+    fputs(line, stdout);
+    sum += sum_numbers(line);
+    sem_post(&(p->sem_A));
+  }
+
+  if (fout != NULL) {
+    fclose(fout);
+  }
+
+  printf("Thread C: Final sum = %.6f\n", sum);
+  return NULL;
 }
